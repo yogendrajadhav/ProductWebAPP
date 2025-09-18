@@ -1,0 +1,8 @@
+<div>
+  <h2>Data loaded from the Web API:</h2>
+  <li *ngFor="let item of response | keyvalue">
+    ID : {{item.key}}, Name: {{item.value}}
+  </li>
+  </div>
+
+<router-outlet />

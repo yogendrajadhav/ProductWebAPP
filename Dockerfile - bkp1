@@ -1,0 +1,27 @@
+### STAGE 1: Build Angular app ###
+FROM public.ecr.aws/docker/library/node:20 AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm install
+COPY . .
+RUN npm run build --configuration=production --base-href=/ --output-path=./dist/product-web-app
+
+### STAGE 2: Serve with NGINX ###
+FROM public.ecr.aws/docker/library/nginx
+#COPY --from=build /app/dist /usr/share/nginx/html
+#RUN ls -la ./dist/product-web-app
+# 👇 Debug: List the build output
+#RUN echo "Listing Angular build output:" && ls -la ./dist/product-web-app
+#RUN find ./dist/product-web-app -type f
+
+COPY --from=build /app/dist/product-web-app /usr/share/nginx/html
+
+COPY /nginx-custom.conf /etc/nginx/conf.d/default.conf
+#COPY ./public/assets/config/config.template.json ./assets/config/config.template.json
+COPY ./public/assets/config/config.template.json /usr/share/nginx/html/assets/config/config.template.json
+
+# Copy the EntryPoint
+COPY ./appEntryPoint.sh /
+RUN chmod +x appEntryPoint.sh
+ENTRYPOINT ["sh","/appEntryPoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]
